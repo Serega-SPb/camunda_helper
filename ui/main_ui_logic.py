@@ -8,7 +8,6 @@ from PyQt5.QtWidgets import *
 from decorators import try_except_wrapper
 import log_config
 from config import Config
-from descriptors import NotifyProperty
 from sender import *
 
 UI_DIR = os.path.dirname(__file__)
@@ -246,7 +245,7 @@ class MainWindow(QMainWindow):
 
     @try_except_wrapper
     def send_request(self, *args):
-        curr_tab = self.tabWidget.currentWidget()
+        curr_tab = self.taskTabs.currentWidget()
         self.save_configs()
 
         if not hasattr(self, 'login'):

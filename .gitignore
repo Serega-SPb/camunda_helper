@@ -8,6 +8,7 @@ __pycache__/
 
 #PyCharm
 .idea/
+src/
 
 # Distribution / packaging
 .Python
