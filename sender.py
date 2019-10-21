@@ -61,10 +61,11 @@ class Request:
 
 class Sender:
 
-    def __init__(self, host, login_pass_64):
+    def __init__(self, host, login_pass):
         self.host = host
         self.session = requests.session()
-        self.session.auth = tuple(base64.b64decode(login_pass_64).decode().split(':'))
+        self.session.auth = tuple(login_pass.split(':'))
+        # self.session.auth = tuple(base64.b64decode(login_pass_64).decode().split(':'))
         # self.auth_resp = self.session.get(host)
 
     def auth(self):

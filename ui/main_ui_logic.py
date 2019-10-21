@@ -79,6 +79,7 @@ class MainWindow(QMainWindow):
         self.current_config = None
         self.logger = logging.getLogger(log_config.LOGGER_NAME)
         self.logger.addHandler(UiLogHandler(self.logPtx))
+        self.load_login()
         self.init_task_fields()
         self.init_ui()
         pass
@@ -122,6 +123,19 @@ class MainWindow(QMainWindow):
     def instance(self, value):
         self.instanceTxb.setText(value)
 
+    @property
+    def login_pass(self):
+        return self.login
+
+    @ login_pass.setter
+    def login_pass(self, value):
+        self.login = value
+        if value:
+            lg = self.login.split(':')[0]
+        else:
+            lg = 'anon'
+        self.loginLbl.setText(lg)
+
     # endregion
 
     def init_ui(self):
@@ -153,6 +167,16 @@ class MainWindow(QMainWindow):
         for task, fields in self.TASK_FIELDS.items():
             for f, w in fields.items():
                 self.ui_subscribe(w, f'utils.[{task}].[{f}]')
+
+    def load_login(self):
+        if not os.path.isfile('login.txt'):
+            return
+        with open('login.txt', 'rb') as file:
+            data = file.read()
+        self.login_pass = base64.b64decode(data).decode()
+        self.loginBtn.setEnabled(False)
+        self.loginBtn.setToolTip('Feature not implemented')
+
 
     # region Event handlers
 
@@ -248,12 +272,8 @@ class MainWindow(QMainWindow):
         curr_tab = self.taskTabs.currentWidget()
         self.save_configs()
 
-        if not hasattr(self, 'login'):
-            with open('login.txt', 'rb') as file:
-                self.login = file.read()
-
         conf = self.current_config
-        sender = Sender(conf.host, self.login)
+        sender = Sender(conf.host, self.login_pass)
         try:
             self.logger.info(sender.auth())
         except Exception as e:
