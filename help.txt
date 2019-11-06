@@ -1,0 +1,16 @@
+Create spec file
+pyi-makespec --onefile --windowed launcher.py
+
+Copy files in dist
+import shutil
+shutil.copyfile('configs.yaml', '{0}/configs.yaml'.format(DISTPATH))
+shutil.copyfile('urls.yaml', '{0}/urls.yaml'.format(DISTPATH))
+shutil.copyfile('login.txt', '{0}/login.txt'.format(DISTPATH))
+
+Compile by spec
+pyinstaller --clean launcher.spec
+
+
+Convvert ui -> py
+
+python -m PyQt5.uic.pyuic -x main.ui -o main_ui.py

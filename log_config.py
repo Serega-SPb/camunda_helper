@@ -15,6 +15,9 @@ LOG_DIRECTORY = os.path.join(ROOT, DIR_LOG)
 LOG_FILENAME = f'{LOGGER_NAME}.log'
 ENCODING = 'utf-8'
 
+if not os.path.exists(LOG_DIRECTORY):
+    os.mkdir(LOG_DIRECTORY)
+
 BACKUP_COUNT = 10
 INTERVAL = 7
 WHEN_INTERVAL = 'D'

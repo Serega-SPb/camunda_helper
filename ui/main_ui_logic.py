@@ -1,17 +1,19 @@
+import base64
 import logging
 import os
 
 import yaml
 
-from PyQt5 import uic
-from PyQt5.QtWidgets import *
+from PyQt5.QtWidgets import QWidget, QDialog, QMainWindow, QGridLayout, QHBoxLayout, \
+                            QLabel, QLineEdit, QCheckBox, QListWidgetItem, QPushButton
 from decorators import try_except_wrapper
 import log_config
 from config import Config
-from sender import *
+from sender import Request, Sender
+from .main_ui import Ui_MainWindow
 
 UI_DIR = os.path.dirname(__file__)
-CONFIGS_FILE = 'configs.cfg'
+CONFIGS_FILE = 'configs.yaml'
 
 
 class UiLogHandler(logging.Handler):
@@ -46,6 +48,63 @@ class ConfigWidget(QWidget):
         self.configLbl.setText(str(self.config))
 
 
+class LoginDialog(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.ui()
+        self.confirm = False
+
+    def ui(self):
+
+        self.resize(250, 125)
+        self.setFixedSize(self.size())
+        self.setWindowTitle('Login')
+        self.setModal(True)
+
+        grid = QGridLayout(self)
+        self.setLayout(grid)
+        hbox = QHBoxLayout(self)
+
+        self.loginLbl = QLabel()
+        self.loginLbl.setText('Login')
+        self.passLbl = QLabel()
+        self.passLbl.setText('Password')
+
+        self.loginTxb = QLineEdit()
+        self.passTxb = QLineEdit()
+        self.passTxb.setEchoMode(QLineEdit.Password)
+
+        grid.addWidget(self.loginLbl, 0, 0)
+        grid.addWidget(self.passLbl, 1, 0)
+        grid.addWidget(self.loginTxb, 0, 1)
+        grid.addWidget(self.passTxb, 1, 1)
+
+        self.okBtn = QPushButton()
+        self.okBtn.setText('Login')
+        self.okBtn.clicked.connect(self.ok_btn_click)
+        self.cancelBtn = QPushButton()
+        self.cancelBtn.setText('Cancel')
+        self.cancelBtn.clicked.connect(self.cancel_btn_click)
+
+        hbox.addWidget(self.okBtn)
+        hbox.addWidget(self.cancelBtn)
+        grid.addLayout(hbox, 3, 0, 1, 2)
+
+    def __save_login_pass(self):
+        login_pass = f'{self.loginTxb.text()}:{self.passTxb.text()}'
+        with open('login.txt', 'wb') as file:
+            file.write(base64.b64encode(login_pass.encode()))
+
+    def ok_btn_click(self):
+        self.__save_login_pass()
+        self.confirm = True
+        self.close()
+
+    def cancel_btn_click(self):
+        self.confirm = False
+        self.close()
+
+
 def set_field_value(source, field_path, value):
     path = field_path.split('.')
     count = len(path)
@@ -75,10 +134,12 @@ class MainWindow(QMainWindow):
     def __init__(self, parent=None):
         self.configs = []
         QWidget.__init__(self, parent)
-        uic.loadUi(os.path.join(UI_DIR, 'main.ui'), self)
+        # uic.loadUi(os.path.join(UI_DIR, 'main.ui'), self)
+        self.ui = Ui_MainWindow()
+        self.ui.setupUi(self)
         self.current_config = None
         self.logger = logging.getLogger(log_config.LOGGER_NAME)
-        self.logger.addHandler(UiLogHandler(self.logPtx))
+        self.logger.addHandler(UiLogHandler(self.ui.logPtx))
         self.load_login()
         self.init_task_fields()
         self.init_ui()
@@ -95,33 +156,33 @@ class MainWindow(QMainWindow):
         self.__current_config = value
         if value:
             self.__select_config(value)
-            self.configParamsContainer.setEnabled(True)
+            self.ui.configParamsContainer.setEnabled(True)
         else:
-            self.configParamsContainer.setEnabled(False)
+            self.ui.configParamsContainer.setEnabled(False)
 
     @property
     def config_name(self):
-        return self.configNameTbx.text()
+        return self.ui.configNameTbx.text()
 
     @config_name.setter
     def config_name(self, value):
-        self.configNameTbx.setText(value)
+        self.ui.configNameTbx.setText(value)
 
     @property
     def host(self):
-        return self.hostTxb.text()
+        return self.ui.hostTxb.text()
 
     @host.setter
     def host(self, value):
-        self.hostTxb.setText(value)
+        self.ui.hostTxb.setText(value)
 
     @property
     def instance(self):
-        return self.instanceTxb.text()
+        return self.ui.instanceTxb.text()
 
     @instance.setter
     def instance(self, value):
-        self.instanceTxb.setText(value)
+        self.ui.instanceTxb.setText(value)
 
     @property
     def login_pass(self):
@@ -134,32 +195,33 @@ class MainWindow(QMainWindow):
             lg = self.login.split(':')[0]
         else:
             lg = 'anon'
-        self.loginLbl.setText(lg)
+        self.ui.loginLbl.setText(lg)
 
     # endregion
 
     def init_ui(self):
 
         self.load_configs()
-        self.addConfigBtn.clicked.connect(self.add_config)
-        self.removeConfigBtn.clicked.connect(self.remove_config)
-        self.saveBtn.clicked.connect(self.save_configs)
-        self.sendRequestBtn.clicked.connect(self.send_request)
-        self.configList.itemSelectionChanged.connect(self.configs_selection_changed)
+        self.ui.addConfigBtn.clicked.connect(self.add_config)
+        self.ui.removeConfigBtn.clicked.connect(self.remove_config)
+        # self.ui.saveBtn.clicked.connect(self.save_configs)
+        self.ui.sendRequestBtn.clicked.connect(self.send_request)
+        self.ui.configList.itemSelectionChanged.connect(self.configs_selection_changed)
+        self.ui.loginBtn.clicked.connect(self.open_login_win)
 
-        self.ui_subscribe(self.configNameTbx, 'name')
-        self.ui_subscribe(self.hostTxb, 'host')
-        self.ui_subscribe(self.instanceTxb, 'instance')
+        self.ui_subscribe(self.ui.configNameTbx, 'name')
+        self.ui_subscribe(self.ui.hostTxb, 'host')
+        self.ui_subscribe(self.ui.instanceTxb, 'instance')
 
-        # self.params_container.setEnabled(False)
+        # self.ui.loginBtn.clicked.connect(self.load_login)
 
     def init_task_fields(self):
         # chBx get - isChecked() set - setChecked()
         move_task = {
-            'is_close': self.closeTaskChbx,
-            'is_start': self.startTaskChbx,
-            'close': self.closeTaskTxb,
-            'start': self.startTaskTxb,
+            'is_close': self.ui.closeTaskChbx,
+            'is_start': self.ui.startTaskChbx,
+            'close': self.ui.closeTaskTxb,
+            'start': self.ui.startTaskTxb,
         }
 
         self.TASK_FIELDS['move_task'] = move_task
@@ -174,11 +236,19 @@ class MainWindow(QMainWindow):
         with open('login.txt', 'rb') as file:
             data = file.read()
         self.login_pass = base64.b64decode(data).decode()
-        self.loginBtn.setEnabled(False)
-        self.loginBtn.setToolTip('Feature not implemented')
 
+    def open_login_win(self):
+        win = LoginDialog(self)
+        win.show()
+        win.exec_()
+        if win.confirm:
+            self.load_login()
+            self.logger.info('Login updated')
 
     # region Event handlers
+
+    def closeEvent(self, *args, **kwargs):
+        self.save_configs()
 
     def ui_subscribe(self, widget, config_field):
         def handler(value):
@@ -196,7 +266,7 @@ class MainWindow(QMainWindow):
         pass
 
     def configs_selection_changed(self):
-        selected = self.configList.selectedItems()
+        selected = self.ui.configList.selectedItems()
         self.current_config = selected[0].config if len(selected) > 0 else None
 
     # endregion
@@ -204,11 +274,11 @@ class MainWindow(QMainWindow):
     def __add_config_widget(self, config):
         item = QListWidgetItem()
         item.config = config
-        widget = ConfigWidget(config, self.configList)
+        widget = ConfigWidget(config, self.ui.configList)
 
         item.setSizeHint(widget.sizeHint())
-        self.configList.addItem(item)
-        self.configList.setItemWidget(item, widget)
+        self.ui.configList.addItem(item)
+        self.ui.configList.setItemWidget(item, widget)
 
     @try_except_wrapper
     def load_configs(self):
@@ -238,7 +308,7 @@ class MainWindow(QMainWindow):
         self.logger.debug('configs saved')
 
     @try_except_wrapper
-    def add_config(self):
+    def add_config(self, *args):
         conf = Config()
         for t, field in self.TASK_FIELDS.items():
             conf.utils[t] = {f: None for f in field.keys()}
@@ -246,12 +316,12 @@ class MainWindow(QMainWindow):
         self.__add_config_widget(conf)
 
     @try_except_wrapper
-    def remove_config(self):
-        items = [self.configList.item(i) for i in range(self.configList.count())]
+    def remove_config(self, *args):
+        items = [self.ui.configList.item(i) for i in range(self.ui.configList.count())]
         item = [i for i in items if hasattr(i, 'config') and i.config == self.current_config]
         if len(item) > 0:
             self.configs.remove(self.current_config)
-            self.configList.takeItem(self.configList.row(item[0]))
+            self.ui.configList.takeItem(self.ui.configList.row(item[0]))
             self.save_configs()
 
     def __select_config(self, config):
@@ -269,16 +339,18 @@ class MainWindow(QMainWindow):
 
     @try_except_wrapper
     def send_request(self, *args):
-        curr_tab = self.taskTabs.currentWidget()
+        curr_tab = self.ui.taskTabs.currentWidget()
         self.save_configs()
 
         conf = self.current_config
-        sender = Sender(conf.host, self.login_pass)
+        request = Request.from_config(curr_tab.objectName(), conf)
+        sender = Sender(conf.host, self.login_pass, self.logger)
+        # self.logger.debug(self.login_pass)
         try:
-            self.logger.info(sender.auth())
+            self.logger.info(sender.auth(request.urls['auth']))
         except Exception as e:
             self.logger.error(e)
-        request = Request.from_config(curr_tab.objectName(), conf)
+
         self.logger.debug(request.get_path(conf.host))
         self.logger.debug(request.body)
 
