@@ -1,4 +1,4 @@
-from descriptors import NotifyProperty
+from core.descriptors import NotifyProperty
 
 NAME = '_name'
 HOST = '_host'

@@ -3,106 +3,20 @@ import logging
 import os
 
 import yaml
+from PyQt5.QtWidgets import QMainWindow, QLineEdit, QMenuBar, \
+                            QMenu, QCheckBox, QListWidgetItem
 
-from PyQt5.QtWidgets import QWidget, QDialog, QMainWindow, QGridLayout, QHBoxLayout, \
-                            QLabel, QLineEdit, QCheckBox, QListWidgetItem, QPushButton
-from decorators import try_except_wrapper
-import log_config
-from config import Config
-from sender import Request, Sender
-from .main_ui import Ui_MainWindow
+from core import log_config
+from core.decorators import try_except_wrapper
+from core.config import Config
+from core.sender import Request, Sender
+from modules.manager import Manager as ModuleManager
+from ui.additional_widgets import LoginDialog, ConfigWidget, InputMenuAction
+from ui.main_ui import Ui_MainWindow
 
 UI_DIR = os.path.dirname(__file__)
+URLS_FILE = 'urls.yaml'
 CONFIGS_FILE = 'configs.yaml'
-
-
-class UiLogHandler(logging.Handler):
-    def __init__(self, log_widget):
-        super().__init__()
-        self.widget = log_widget
-        self.widget.setReadOnly(True)
-        self.setFormatter(log_config.formatter)
-        self.setLevel(log_config.STREAM_LOG_LVL)
-
-    def emit(self, record):
-        msg = self.format(record)
-        self.widget.appendPlainText(msg)
-
-
-class ConfigWidget(QWidget):
-    def __init__(self, config, parent=None):
-        super().__init__(parent)
-        self.config = config
-        self.ui()
-        self.config.subscribe('name', self.set_lbl)
-        self.config.subscribe('host', self.set_lbl)
-        self.set_lbl()
-
-    def ui(self):
-        grid = QGridLayout(self)
-        self.setLayout(grid)
-        self.configLbl = QLabel(self)
-        grid.addWidget(self.configLbl)
-
-    def set_lbl(self, *args):
-        self.configLbl.setText(str(self.config))
-
-
-class LoginDialog(QDialog):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.ui()
-        self.confirm = False
-
-    def ui(self):
-
-        self.resize(250, 125)
-        self.setFixedSize(self.size())
-        self.setWindowTitle('Login')
-        self.setModal(True)
-
-        grid = QGridLayout(self)
-        self.setLayout(grid)
-        hbox = QHBoxLayout(self)
-
-        self.loginLbl = QLabel()
-        self.loginLbl.setText('Login')
-        self.passLbl = QLabel()
-        self.passLbl.setText('Password')
-
-        self.loginTxb = QLineEdit()
-        self.passTxb = QLineEdit()
-        self.passTxb.setEchoMode(QLineEdit.Password)
-
-        grid.addWidget(self.loginLbl, 0, 0)
-        grid.addWidget(self.passLbl, 1, 0)
-        grid.addWidget(self.loginTxb, 0, 1)
-        grid.addWidget(self.passTxb, 1, 1)
-
-        self.okBtn = QPushButton()
-        self.okBtn.setText('Login')
-        self.okBtn.clicked.connect(self.ok_btn_click)
-        self.cancelBtn = QPushButton()
-        self.cancelBtn.setText('Cancel')
-        self.cancelBtn.clicked.connect(self.cancel_btn_click)
-
-        hbox.addWidget(self.okBtn)
-        hbox.addWidget(self.cancelBtn)
-        grid.addLayout(hbox, 3, 0, 1, 2)
-
-    def __save_login_pass(self):
-        login_pass = f'{self.loginTxb.text()}:{self.passTxb.text()}'
-        with open('login.txt', 'wb') as file:
-            file.write(base64.b64encode(login_pass.encode()))
-
-    def ok_btn_click(self):
-        self.__save_login_pass()
-        self.confirm = True
-        self.close()
-
-    def cancel_btn_click(self):
-        self.confirm = False
-        self.close()
 
 
 def set_field_value(source, field_path, value):
@@ -128,15 +42,30 @@ def set_field_value(source, field_path, value):
         i += 1
 
 
+class UiLogHandler(logging.Handler):
+    def __init__(self, log_widget):
+        super().__init__()
+        self.widget = log_widget
+        self.widget.setReadOnly(True)
+        self.setFormatter(log_config.formatter)
+        self.setLevel(log_config.STREAM_LOG_LVL)
+
+    def emit(self, record):
+        msg = self.format(record)
+        self.widget.appendPlainText(msg)
+
+
 class MainWindow(QMainWindow):
     TASK_FIELDS = {}
 
     def __init__(self, parent=None):
         self.configs = []
-        QWidget.__init__(self, parent)
+        self.urls = {'auth': '', 'engine': ''}
+        super().__init__(parent)
         # uic.loadUi(os.path.join(UI_DIR, 'main.ui'), self)
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+        self.mod_manager = ModuleManager()
         self.current_config = None
         self.logger = logging.getLogger(log_config.LOGGER_NAME)
         self.logger.addHandler(UiLogHandler(self.ui.logPtx))
@@ -200,7 +129,8 @@ class MainWindow(QMainWindow):
     # endregion
 
     def init_ui(self):
-
+        self.load_urls()
+        self.fill_menu_bar()
         self.load_configs()
         self.ui.addConfigBtn.clicked.connect(self.add_config)
         self.ui.removeConfigBtn.clicked.connect(self.remove_config)
@@ -213,10 +143,28 @@ class MainWindow(QMainWindow):
         self.ui_subscribe(self.ui.hostTxb, 'host')
         self.ui_subscribe(self.ui.instanceTxb, 'instance')
 
-        # self.ui.loginBtn.clicked.connect(self.load_login)
+    def fill_menu_bar(self):
+
+        def set_url(key, value):
+            self.urls[key] = value
+
+        self.ui.menuBar.clear()
+        self.ui.urlMenus = []
+        urls_menu = QMenu(self.ui.menuBar)
+        urls_menu.setTitle('Urls')
+
+        for n, u in self.urls.items():
+            url_menu = InputMenuAction(self.ui.menuBar)
+            url_menu.setObjectName(n)
+            self.ui.urlMenus.append(url_menu)
+            url_menu.label = n
+            url_menu.valueLE.setText(u)
+            url_menu.valueChanged.connect(set_url)
+            urls_menu.addAction(url_menu.get_widget_action(urls_menu))
+
+        self.ui.menuBar.addAction(urls_menu.menuAction())
 
     def init_task_fields(self):
-        # chBx get - isChecked() set - setChecked()
         move_task = {
             'is_close': self.ui.closeTaskChbx,
             'is_start': self.ui.startTaskChbx,
@@ -248,6 +196,7 @@ class MainWindow(QMainWindow):
     # region Event handlers
 
     def closeEvent(self, *args, **kwargs):
+        self.save_urls()
         self.save_configs()
 
     def ui_subscribe(self, widget, config_field):
@@ -279,6 +228,21 @@ class MainWindow(QMainWindow):
         item.setSizeHint(widget.sizeHint())
         self.ui.configList.addItem(item)
         self.ui.configList.setItemWidget(item, widget)
+
+    @try_except_wrapper
+    def load_urls(self):
+        if not os.path.isfile(URLS_FILE):
+            return
+        with open(URLS_FILE, 'r', encoding='utf-8') as file:
+            data = yaml.load(file, yaml.FullLoader)
+        self.urls = {n: data.get(n, '') for n, u in self.urls.items()}
+        self.logger.debug('urls loaded')
+
+    @try_except_wrapper
+    def save_urls(self):
+        with open(URLS_FILE, 'w', encoding='utf-8') as file:
+            yaml.dump(self.urls, file, default_flow_style=False)
+        self.logger.debug('urls saved')
 
     @try_except_wrapper
     def load_configs(self):

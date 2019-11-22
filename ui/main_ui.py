@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'main.ui'
+# Form implementation generated from reading ui file 'D:\Repositories\camunda_helper\ui\main.ui'
 #
 # Created by: PyQt5 UI code generator 5.13.0
 #
@@ -145,9 +145,10 @@ class Ui_MainWindow(object):
         self.logPtx.setObjectName("logPtx")
         self.gridLayout.addWidget(self.logPtx, 4, 1, 1, 2)
         MainWindow.setCentralWidget(self.centralwidget)
-        self.statusBar = QtWidgets.QStatusBar(MainWindow)
-        self.statusBar.setObjectName("statusBar")
-        MainWindow.setStatusBar(self.statusBar)
+        self.menuBar = QtWidgets.QMenuBar(MainWindow)
+        self.menuBar.setGeometry(QtCore.QRect(0, 0, 981, 21))
+        self.menuBar.setObjectName("menuBar")
+        MainWindow.setMenuBar(self.menuBar)
 
         self.retranslateUi(MainWindow)
         self.taskTabs.setCurrentIndex(0)

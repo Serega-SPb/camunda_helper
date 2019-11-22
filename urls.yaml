@@ -1,2 +1,2 @@
 auth: /auth
-move_task: /camunda/api/engine/engine/default/process-instance/
+engine: /camunda/api/engine/engine/default/process-instance
