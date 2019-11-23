@@ -17,6 +17,12 @@ class Config:
         self._host = NotifyProperty(HOST)
         self._instance = NotifyProperty(INSTANCE)
         self.utils = {}
+        self.set_default()
+
+    def set_default(self):
+        self.name = ''
+        self.host = ''
+        self.instance = ''
 
     # region Properties
     @property
@@ -67,6 +73,10 @@ class Config:
     def subscribe(self, name, func):
         f = getattr(self, f'_{name}')
         f += func
+
+    def unsubscribe(self, name, func):
+        f = getattr(self, f'_{name}')
+        f -= func
 
     def get_dict(self):
         res = {}

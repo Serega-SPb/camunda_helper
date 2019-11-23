@@ -17,6 +17,10 @@ class NotifyProperty:
         self.subscribers.append(other)
         return self
 
+    def __isub__(self, other):
+        self.subscribers.remove(other)
+        return self
+
     def __eq__(self, other):
         return self.value == other
 

@@ -12,7 +12,7 @@ Module = namedtuple('Module', 'model view controller')
 
 class Manager(metaclass=Singleton):
 
-    MODULE_LIST = ['move_task']
+    MODULE_LIST = ['move_task', 'set_variable']
 
     def __init__(self):
         self.logger = logging.getLogger(log_config.LOGGER_NAME)
@@ -30,6 +30,9 @@ class Manager(metaclass=Singleton):
         if hasattr(mod, 'get_mvc'):
             self.__modules[module_name] = Module(*getattr(mod, 'get_mvc')())
 
+    def get_views(self):
+        return {n: m.view for n, m in self.__modules.items()}
+
     def get_model_by_name(self, value):
         if value in self.__modules.keys():
             return self.__modules[value].model
@@ -37,6 +40,21 @@ class Manager(metaclass=Singleton):
     def get_view_by_name(self, value):
         if value in self.__modules.keys():
             return self.__modules[value].view
+
+    def update_config_fields(self, config):
+        for name, mod in self.__modules.items():
+            fields = dict(mod.model.__dict__.items())
+            if name not in config.utils:
+                config.utils[name] = {f[1:]: v for f, v in fields.items()}
+            else:
+                for f in fields.keys():
+                    p = f[1:]
+                    if p not in config.utils[name] or not config.utils[name][p]:
+                        config.utils[name][p] = fields[f]
+
+    # TODO
+    #  ?
+    #  ? def apply_config_views(self, config):
 
 
 def test_move_task(manager):
@@ -50,6 +68,7 @@ def main():
     from PyQt5.QtWidgets import QApplication
     app = QApplication([])
     manager = Manager()
+    views = manager.get_views()
     test_move_task(manager)
     app.exec_()
 

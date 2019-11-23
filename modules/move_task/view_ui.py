@@ -32,9 +32,9 @@ class Ui_Form(object):
         self.gridLayout.addWidget(self.startTaskTxb, 1, 1, 1, 1)
 
         self.retranslateUi(Form)
-        self.closeTaskChbx.clicked['bool'].connect(self.closeTaskTxb.setEnabled)
+        self.closeTaskChbx.toggled['bool'].connect(self.closeTaskTxb.setEnabled)
         self.closeTaskChbx.clicked.connect(self.closeTaskTxb.clear)
-        self.startTaskChbx.clicked['bool'].connect(self.startTaskTxb.setEnabled)
+        self.startTaskChbx.toggled['bool'].connect(self.startTaskTxb.setEnabled)
         self.startTaskChbx.clicked.connect(self.startTaskTxb.clear)
         QtCore.QMetaObject.connectSlotsByName(Form)
 

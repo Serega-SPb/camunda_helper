@@ -48,7 +48,7 @@
  <connections>
   <connection>
    <sender>closeTaskChbx</sender>
-   <signal>clicked(bool)</signal>
+   <signal>toggled(bool)</signal>
    <receiver>closeTaskTxb</receiver>
    <slot>setEnabled(bool)</slot>
    <hints>
@@ -80,7 +80,7 @@
   </connection>
   <connection>
    <sender>startTaskChbx</sender>
-   <signal>clicked(bool)</signal>
+   <signal>toggled(bool)</signal>
    <receiver>startTaskTxb</receiver>
    <slot>setEnabled(bool)</slot>
    <hints>

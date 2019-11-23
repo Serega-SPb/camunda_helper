@@ -13,6 +13,11 @@ class ConfigWidget(QWidget):
         self.config.subscribe('name', self.set_lbl)
         self.config.subscribe('host', self.set_lbl)
         self.set_lbl()
+        self.configLbl.destroyed.connect(lambda: self.unsubscribe())
+
+    def unsubscribe(self):
+        self.config.unsubscribe('name', self.set_lbl)
+        self.config.unsubscribe('host', self.set_lbl)
 
     def ui(self):
         grid = QGridLayout(self)

@@ -149,14 +149,14 @@ class MainWindow(QMainWindow):
             self.urls[key] = value
 
         self.ui.menuBar.clear()
-        self.ui.urlMenus = []
+        # self.ui.urlMenus = []
         urls_menu = QMenu(self.ui.menuBar)
         urls_menu.setTitle('Urls')
 
         for n, u in self.urls.items():
             url_menu = InputMenuAction(self.ui.menuBar)
             url_menu.setObjectName(n)
-            self.ui.urlMenus.append(url_menu)
+            # self.ui.urlMenus.append(url_menu)
             url_menu.label = n
             url_menu.valueLE.setText(u)
             url_menu.valueChanged.connect(set_url)
