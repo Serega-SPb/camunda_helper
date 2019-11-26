@@ -1,5 +1,6 @@
 import logging
 import importlib
+import os
 from collections import namedtuple
 
 from core import log_config
@@ -27,7 +28,7 @@ class Manager(metaclass=Singleton):
     @try_except_wrapper
     def __import_module(self, module_name):
 
-        mod = importlib.import_module(module_name, package='.')
+        mod = importlib.import_module(module_name, package=os.path.dirname(__file__))
         if hasattr(mod, 'get_mvc'):
             self.__modules[module_name] = Module(*getattr(mod, 'get_mvc')())
         if hasattr(mod, 'get_request_cl'):

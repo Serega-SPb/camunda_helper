@@ -28,7 +28,7 @@ class UiLogHandler(logging.Handler):
 
 
 class MainView(QMainWindow):
-    ICON_FILE = 'camunda_logo.png'
+    ICON_FILE = f'{os.path.dirname(__file__)}\\camunda_logo.png'
 
     def __init__(self, model, controller, parent=None):
         super().__init__(parent)

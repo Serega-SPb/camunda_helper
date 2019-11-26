@@ -12,5 +12,9 @@ pyinstaller --clean launcher.spec
 
 
 Convvert ui -> py
-
 python -m PyQt5.uic.pyuic -x main.ui -o main_ui.py
+
+Spec updates
+pathex=['D:\\Repositories\\camunda_helper', 'D:\\Repositories\\camunda_helper\\modules'],
+datas=[('D:\\Repositories\\camunda_helper\\ui\\camunda_logo.png', 'ui')],
+hiddenimports=[m for m in os.listdir('D:\\Repositories\\camunda_helper\\modules') if os.path.isdir(f'D:\\Repositories\\camunda_helper\\modules\\{m}') and not m.startswith('__') ],
