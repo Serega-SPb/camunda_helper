@@ -17,6 +17,7 @@ class Manager(metaclass=Singleton):
     def __init__(self):
         self.logger = logging.getLogger(log_config.LOGGER_NAME)
         self.__modules = {}
+        self.__request_cl = {}
         self.__init_modules()
 
     def __init_modules(self):
@@ -29,6 +30,8 @@ class Manager(metaclass=Singleton):
         mod = importlib.import_module(module_name, package='.')
         if hasattr(mod, 'get_mvc'):
             self.__modules[module_name] = Module(*getattr(mod, 'get_mvc')())
+        if hasattr(mod, 'get_request_cl'):
+            self.__request_cl[module_name] = getattr(mod, 'get_request_cl')
 
     def get_views(self):
         return {n: m.view for n, m in self.__modules.items()}
@@ -40,6 +43,11 @@ class Manager(metaclass=Singleton):
     def get_view_by_name(self, value):
         if value in self.__modules.keys():
             return self.__modules[value].view
+
+    def create_request(self, module_name):
+        if module_name in self.__request_cl.keys():
+            model = self.get_model_by_name(module_name)
+            return self.__request_cl[module_name](model)
 
     def update_config_fields(self, config):
         for name, mod in self.__modules.items():

@@ -7,6 +7,7 @@ from PyQt5.QtCore import QObject
 
 from core import log_config
 from core.config import Config
+from core.sender import Sender
 from core.decorators import try_except_wrapper
 from modules.manager import Manager as ModuleManager
 
@@ -40,6 +41,8 @@ class MainController(QObject):
         self.model = model
         self.logger = logging.getLogger(log_config.LOGGER_NAME)
         self.mod_manager = ModuleManager()
+        self.sender = None
+        self.question_method = None
 
     def load_login(self):
         if not os.path.isfile(self.model.LOGIN_FILE):
@@ -106,6 +109,7 @@ class MainController(QObject):
     @try_except_wrapper
     def select_config(self, config):
         self.model.current_config = config
+        self.sender = None
 
     def update_config_field(self, field, value):
         if self.model.current_config:
@@ -125,16 +129,16 @@ class MainController(QObject):
         self.logger.debug(module)
         self.logger.debug(str(mod_params))
 
-        # request = Request.from_config(curr_tab.objectName(), conf)
-        # sender = Sender(conf.host, self.login_pass, self.logger)
-        # # self.logger.debug(self.login_pass)
-        # try:
-        #     self.logger.info(sender.auth(request.urls['auth']))
-        # except Exception as e:
-        #     self.logger.error(e)
-        #
-        # self.logger.debug(request.get_path(conf.host))
-        # self.logger.debug(request.body)
-        #
-        # resp = sender.send(request)
-        # self.logger.info(f'Response: {resp}')
+        if self.sender is None:
+            self.sender = Sender(self.logger,
+                                 conf.host,
+                                 self.model.login_pass,
+                                 self.model.urls)
+            self.sender.question_method = self.question_method
+            if not self.sender.auth():
+                self.sender = None
+                return
+        request = self.mod_manager.create_request(module)
+        response = self.sender.send_request(conf.instance, request)
+        if response is None:
+            self.sender = None

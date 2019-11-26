@@ -1,7 +1,9 @@
 import logging
+import os
 
 from PyQt5.QtCore import pyqtSlot
-from PyQt5.QtWidgets import QMainWindow, QMenu, QTabWidget, \
+from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import QMainWindow, QMenu, QMessageBox, QAction, \
                             QListWidgetItem, QLineEdit, QCheckBox
 
 from core import log_config
@@ -26,6 +28,8 @@ class UiLogHandler(logging.Handler):
 
 
 class MainView(QMainWindow):
+    ICON_FILE = 'camunda_logo.png'
+
     def __init__(self, model, controller, parent=None):
         super().__init__(parent)
         self.model = model
@@ -34,16 +38,20 @@ class MainView(QMainWindow):
 
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+        if os.path.isfile(self.ICON_FILE):
+            self.setWindowIcon(QIcon(self.ICON_FILE))
 
         self.logger = logging.getLogger(log_config.LOGGER_NAME)
         self.logger.addHandler(UiLogHandler(self.ui.logPtx))
 
+        self.load_menu_bar()
         self.connect_widgets()
         self.connect_model_signals()
         self.controller_loads()
         self.load_modules()
 
     def controller_loads(self):
+        self.controller.question_method = self.open_question
         self.controller.load_login()
         self.controller.load_urls()
         self.controller.load_configs()
@@ -62,7 +70,7 @@ class MainView(QMainWindow):
 
     def connect_model_signals(self):
         self.model.login_changed.connect(self.ui.loginLbl.setText)
-        self.model.urls_changed.connect(self.fill_menu_bar)
+        self.model.urls_changed.connect(self.reload_urls_menu)
         self.model.configs_changed.connect(self.on_configs_changed)
         self.model.current_config_changed.connect(self.on_current_config_changed)
         self.model.config_added.connect(self.add_config_widget)
@@ -118,6 +126,17 @@ class MainView(QMainWindow):
             field_path = f'utils.[{module_name}].[{prop}]'
             connecting(signal, field_path)
 
+    def load_menu_bar(self):
+        self.ui.menuBar.clear()
+        self.urls_menu = QMenu(self.ui.menuBar)
+        self.urls_menu.setTitle('Urls')
+        self.ui.menuBar.addAction(self.urls_menu.menuAction())
+
+        self.about = QAction(self.ui.menuBar)
+        self.about.setText('About')
+        self.about.triggered.connect(self.open_about)
+        self.ui.menuBar.addAction(self.about)
+
     def config_field_changing(self, widget, field):
         if isinstance(widget, QLineEdit):
             widget.textChanged.connect(
@@ -170,19 +189,14 @@ class MainView(QMainWindow):
 
     @try_except_wrapper
     @pyqtSlot(dict)
-    def fill_menu_bar(self, menus):
-        self.ui.menuBar.clear()
-        urls_menu = QMenu(self.ui.menuBar)
-        urls_menu.setTitle('Urls')
-
+    def reload_urls_menu(self, menus):
+        self.urls_menu.clear()
         for n, u in menus.items():
             url_menu = InputMenuAction(self.ui.menuBar)
             url_menu.label = n
             url_menu.valueLE.setText(u)
             url_menu.valueChanged.connect(self.controller.update_url)
-            urls_menu.addAction(url_menu.get_widget_action(urls_menu))
-
-        self.ui.menuBar.addAction(urls_menu.menuAction())
+            self.urls_menu.addAction(url_menu.get_widget_action(self.urls_menu))
 
     def open_login_win(self):
         win = LoginDialog(self)
@@ -203,6 +217,20 @@ class MainView(QMainWindow):
             return
         self.controller.select_module(
             self.ui.taskTabs.widget(ind).objectName())
+
+    def open_about(self):
+        about_msg = '''
+            <h3>Camunda helper</h3>
+            <p>
+            <b>Author:</b> Abissov Sergey <br>
+            <b>Source code:</b> <a href="https://github.com/Serega-SPb/camunda_helper">Github</a>
+            </p>'''
+        QMessageBox.information(self, 'About', about_msg)
+
+    def open_question(self, msg):
+        answer = QMessageBox.question(self, 'Send this?', msg,
+                                      QMessageBox.Yes | QMessageBox.No)
+        return True if answer == QMessageBox.Yes else False
 
     def configs_selection_changed(self):
         selected = self.ui.configList.selectedItems()

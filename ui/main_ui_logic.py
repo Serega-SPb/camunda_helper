@@ -9,7 +9,7 @@ from PyQt5.QtWidgets import QMainWindow, QLineEdit, QMenuBar, \
 from core import log_config
 from core.decorators import try_except_wrapper
 from core.config import Config
-from core.sender import Request, Sender
+# from core.sender import Request, Sender
 from modules.manager import Manager as ModuleManager
 from ui.additional_widgets import LoginDialog, ConfigWidget, InputMenuAction
 from ui.main_ui import Ui_MainWindow
@@ -307,16 +307,16 @@ class MainWindow(QMainWindow):
         self.save_configs()
 
         conf = self.current_config
-        request = Request.from_config(curr_tab.objectName(), conf)
-        sender = Sender(conf.host, self.login_pass, self.logger)
-        # self.logger.debug(self.login_pass)
-        try:
-            self.logger.info(sender.auth(request.urls['auth']))
-        except Exception as e:
-            self.logger.error(e)
-
-        self.logger.debug(request.get_path(conf.host))
-        self.logger.debug(request.body)
-
-        resp = sender.send(request)
-        self.logger.info(f'Response: {resp}')
+        # request = Request.from_config(curr_tab.objectName(), conf)
+        # sender = Sender(conf.host, self.login_pass, self.logger)
+        # # self.logger.debug(self.login_pass)
+        # try:
+        #     self.logger.info(sender.auth(request.urls['auth']))
+        # except Exception as e:
+        #     self.logger.error(e)
+        #
+        # self.logger.debug(request.get_path(conf.host))
+        # self.logger.debug(request.body)
+        #
+        # resp = sender.send(request)
+        # self.logger.info(f'Response: {resp}')
