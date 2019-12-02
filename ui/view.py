@@ -217,6 +217,7 @@ class MainView(QMainWindow):
             return
         self.controller.select_module(
             self.ui.taskTabs.widget(ind).objectName())
+        self.update_send_btn_status()
 
     def open_about(self):
         about_msg = '''

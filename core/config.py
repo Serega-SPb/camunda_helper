@@ -62,14 +62,6 @@ class Config:
                 # f = source[s]
         return ins
 
-    """
-        # self.configs = [
-        #     Config.from_dict({'_name': 'test1', '_host': '127.0.0.1', '_instance': 'instance_1', 'utils': []}),
-        #     Config.from_dict({'_name': 'test2', '_host': '127.0.0.2', '_instance': 'instance_2', 'utils': []}),
-        #     Config.from_dict({'_name': 'test3', '_host': '127.0.0.3', '_instance': 'instance_3', 'utils': []}),
-        # ]
-    """
-
     def subscribe(self, name, func):
         f = getattr(self, f'_{name}')
         f += func

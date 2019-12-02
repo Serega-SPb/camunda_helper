@@ -1,8 +1,5 @@
 import requests
-
-GET = 'GET'
-POST = 'POST'
-PUT = 'PUT'
+import json
 
 
 class Sender:
@@ -27,7 +24,7 @@ class Sender:
     def send_request(self, instance, request):
         method = request.METHOD
         url = f'{self.host}{self.urls["engine"]}{request.get_url(instance)}'
-        body = request.get_body()
+        body = json.dumps(request.get_body())
 
         result_msg = f'\n' \
                      f'REQUEST:\n' \

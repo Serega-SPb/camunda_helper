@@ -73,12 +73,20 @@ def test_move_task(manager):
     view.show()
 
 
+def test_set_variable(manager):
+    model = manager.get_model_by_name('set_variable')
+    model.can_send_changed.connect(lambda: print(model))
+    view = manager.get_view_by_name('set_variable')
+    view.show()
+
+
 def main():
     from PyQt5.QtWidgets import QApplication
     app = QApplication([])
     manager = Manager()
     views = manager.get_views()
-    test_move_task(manager)
+    # test_move_task(manager)
+    test_set_variable(manager)
     app.exec_()
 
 

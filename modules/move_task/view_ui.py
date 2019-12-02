@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'D:\Repositories\camunda_helper\modules\move_task\ui\view.ui'
+# Form implementation generated from reading ui file 'D:\Repositories\camunda_helper\modules\move_task\view.ui'
 #
 # Created by: PyQt5 UI code generator 5.13.0
 #
@@ -21,6 +21,10 @@ class Ui_Form(object):
         self.gridLayout.addWidget(self.closeTaskChbx, 0, 0, 1, 1)
         self.closeTaskTxb = QtWidgets.QLineEdit(Form)
         self.closeTaskTxb.setEnabled(False)
+        font = QtGui.QFont()
+        font.setFamily("Tahoma")
+        font.setPointSize(10)
+        self.closeTaskTxb.setFont(font)
         self.closeTaskTxb.setObjectName("closeTaskTxb")
         self.gridLayout.addWidget(self.closeTaskTxb, 0, 1, 1, 1)
         self.startTaskChbx = QtWidgets.QCheckBox(Form)

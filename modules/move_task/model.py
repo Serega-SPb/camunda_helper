@@ -16,7 +16,9 @@ class MTModel(QObject):
         self._close = ''
         self._start = ''
 
-    # TODO Properties
+    def __repr__(self):
+        return f'<MTModel>(is_close={self.is_close}, close={self.close},' \
+               f'is_start={self.is_start}, start={self.start}, can_send={self.can_send})'
 
     @property
     def is_close(self):
