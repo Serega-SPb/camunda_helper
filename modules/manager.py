@@ -85,8 +85,8 @@ def main():
     app = QApplication([])
     manager = Manager()
     views = manager.get_views()
-    # test_move_task(manager)
-    test_set_variable(manager)
+    test_move_task(manager)
+    # test_set_variable(manager)
     app.exec_()
 
 

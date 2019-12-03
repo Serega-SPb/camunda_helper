@@ -17,3 +17,10 @@ class MTController(QObject):
 
     def start_change(self, value):
         self.model.start = value
+
+    def transposition(self):
+        model = self.model
+        if not model.is_start and not model.is_close:
+            return
+        model.close, model.start = model.start, model.close
+        model.is_close, model.is_start = model.is_start, model.is_close

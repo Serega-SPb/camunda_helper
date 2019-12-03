@@ -46,10 +46,14 @@ class MainController(QObject):
 
     def load_login(self):
         if not os.path.isfile(self.model.LOGIN_FILE):
+            self.model.login_pass = ''
             return
         with open(self.model.LOGIN_FILE, 'rb') as file:
             data = file.read()
-        self.model.login_pass = base64.b64decode(data).decode()
+        if data:
+            self.model.login_pass = base64.b64decode(data).decode()
+        else:
+            self.model.login_pass = ''
 
     @try_except_wrapper
     def load_urls(self):

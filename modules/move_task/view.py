@@ -22,6 +22,7 @@ class MTView(QWidget):
         self.ui.startTaskChbx.toggled['bool'].connect(self.controller.is_start_change)
         self.ui.closeTaskTxb.textChanged.connect(self.controller.close_change)
         self.ui.startTaskTxb.textChanged.connect(self.controller.start_change)
+        self.ui.transpositionBtn.clicked.connect(self.controller.transposition)
 
     def connect_model_signals(self):
         self.model.is_close_changed.connect(self.on_is_close_changed)
@@ -44,5 +45,3 @@ class MTView(QWidget):
     @pyqtSlot(str)
     def on_start_changed(self, value):
         self.ui.startTaskTxb.setText(value)
-
-
